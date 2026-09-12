@@ -25,4 +25,4 @@ npm run web        # browser only, http://localhost:3000
 npm run dist       # build AppImage + deb into release/
 ```
 
-MIT © Mohamed Emad
+MIT © [Mohamed Emad](https://github.com/TheGeekyM) · thegeekym@gmail.com
