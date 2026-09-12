@@ -6,9 +6,11 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const SETTINGS = path.join(__dirname, 'settings.json');
+// ponytail: PLUCK_DATA set by main.js to Electron userData (asar is read-only); dev/web mode keeps files next to the code
+const DATA = process.env.PLUCK_DATA || __dirname;
+const SETTINGS = path.join(DATA, 'settings.json');
 const load = () => fs.existsSync(SETTINGS) ? JSON.parse(fs.readFileSync(SETTINGS)) : { outputDir: path.join(require('os').homedir(), 'Downloads') };
 
 // ponytail: pip --user install lands in ~/.local/bin, prefer it over the system copy
@@ -29,7 +31,7 @@ app.post('/api/ytdlp/update', (req, res) => {
     res.json({ ok: !e, output, version });
   });
 });
-const QUEUE = path.join(__dirname, 'queue.json'); // ponytail: client owns state, posts whole thing on change
+const QUEUE = path.join(DATA, 'queue.json'); // ponytail: client owns state, posts whole thing on change
 app.get('/api/queue', (req, res) => res.json(fs.existsSync(QUEUE) ? JSON.parse(fs.readFileSync(QUEUE)) : { queue: [], history: [] }));
 app.post('/api/queue', (req, res) => { fs.writeFileSync(QUEUE, JSON.stringify(req.body)); res.json({ ok: true }); });
 app.get('/api/pick', async (req, res) => {

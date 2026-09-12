@@ -1,4 +1,5 @@
 const { app, BrowserWindow, dialog, shell, Menu } = require('electron');
+process.env.PLUCK_DATA = app.getPath('userData');
 const server = require('./server');
 
 app.whenReady().then(() => {

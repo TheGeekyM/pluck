@@ -1,6 +1,6 @@
 {
   "name": "pluck",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pluck videos and audio off YouTube. A dark, minimal desktop GUI for yt-dlp.",
   "main": "main.js",
   "scripts": {
