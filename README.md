@@ -2,11 +2,15 @@
 
 Pluck videos and audio off YouTube. A dark, minimal desktop GUI for [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
+![Downloads](docs/downloads.png)
+
 - Paste video or playlist links, pick **download as**: best / 2160p … 360p / MP3 / WAV
 - Live progress per link, resume unfinished downloads after restart
 - History with YouTube link and one-click redownload in another format
 - Checks yt-dlp on startup, one-click update from settings
 - Choose the output folder with a native picker
+
+![History](docs/history.png)
 
 ## Requirements
 
