@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Pluck</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#262a35;--text:#e6e8ee;--muted:#8a91a3;--accent:#7c5cff;--ok:#3ddc97;--err:#ff5c7a}
+  *{box-sizing:border-box}
+  ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px} ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Inter,sans-serif}
+  header{display:flex;align-items:center;gap:.6rem;padding:1rem 1.5rem;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg)}
+  header h1{font-size:1.1rem;margin:0;font-weight:600;margin-right:1rem}
+  .tabs{display:flex;gap:.25rem;flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.2rem;width:fit-content;flex:none;margin-right:auto}
+  .tab{border:0;background:transparent;color:var(--muted);padding:.4rem .8rem;border-radius:8px} .tab:hover{color:var(--text)}
+  .tab.active{background:var(--bg);color:var(--text)}
+  section[hidden]{display:none}
+  main{max-width:960px;margin:0 auto;padding:1.5rem}
+  svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  button{display:inline-flex;align-items:center;gap:.4rem;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem;cursor:pointer;font:inherit}
+  button:hover{border-color:var(--accent)} button:disabled{opacity:.45;cursor:default}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.icon{padding:.5rem;color:var(--muted)} button.icon:hover{color:var(--text)}
+  input,select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:.5rem .7rem;font:inherit;outline:none;-webkit-user-select:text}
+  input:focus,select:focus{border-color:var(--accent)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.8rem;margin-bottom:.8rem}
+  .row{display:flex;gap:.5rem;align-items:center}
+  .row input[type=url]{flex:1;background:var(--bg)}
+  .row select{background:var(--bg)}
+  .log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:pre-wrap;max-height:4.5em;overflow:auto;margin:.6rem 0 0;display:none}
+  .log:not(:empty){display:block}
+  .bar{height:3px;background:var(--line);border-radius:3px;margin-top:.6rem;overflow:hidden;display:none}
+  .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+  .done .bar i{background:var(--ok)} .fail .bar i{background:var(--err);width:100%!important}
+  .actions{display:flex;gap:.5rem;margin-top:1rem}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:1.2rem;width:min(560px,90vw)}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h2{margin:0 0 1rem;font-size:1rem;display:flex;align-items:center;gap:.5rem}
+  dialog h2 button{margin-left:auto}
+  dialog .row{margin:.4rem 0 1rem} dialog input{flex:1;background:var(--bg)}
+  .badge{display:inline-flex;align-items:center;gap:.35rem;font-size:.8rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:.25rem .6rem}
+  .badge.ok{color:var(--ok)} .badge.warn{color:#ffb347;border-color:#ffb347} .badge.err{color:var(--err);border-color:var(--err)}
+  .badge svg{width:14px;height:14px}
+  #history .card > .row > svg:first-child{color:var(--ok)}
+  .meta{flex:1;min-width:0} .meta .title{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meta .url{display:block;color:var(--muted);font-size:.8rem;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .meta .url:hover{color:var(--accent);text-decoration:underline}
+  .fmt{color:var(--muted);font-size:.8rem;white-space:nowrap}
+  #hist:empty::before{content:'Nothing downloaded yet';color:var(--muted);display:block;text-align:center;padding:3rem}
+  .resume .dl span{display:none} .resume .dl::after{content:'Resume'}
+  #ytBox{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap} #ytOut{font:12px ui-monospace,monospace;color:var(--muted);white-space:pre-wrap;margin:.4rem 0 0}
+  label.muted{color:var(--muted);font-size:.85rem}
+</style></head><body>
+<header>
+  <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 21h16"/></svg>
+  <h1>Pluck</h1>
+  <nav class="tabs">
+    <button class="tab active" data-tab="downloads" onclick="showTab('downloads')"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Downloads</button>
+    <button class="tab" data-tab="history" onclick="showTab('history')"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>History</button>
+  </nav>
+  <span id="ytBadge" class="badge">checking yt-dlp…</span>
+  
+  <button class="icon" title="Settings" onclick="openSettings()">
+    <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+</header>
+<main>
+  <dialog id="settings">
+    <h2><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
+      <button class="icon" onclick="settings.close()" title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></h2>
+    <label class="muted">Output directory</label>
+    <div class="row">
+      <input id="outDir">
+      <button onclick="pickFolder()" title="Browse"><svg viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Browse</button>
+      <button class="primary" onclick="saveSettings()"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Save</button>
+    </div>
+    <label class="muted">yt-dlp</label>
+    <div id="ytBox" class="row">
+      <span id="ytInfo" class="muted">checking…</span>
+      <button id="ytUpd" onclick="updateYtdlp()"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg><span>Update</span></button>
+    </div>
+    <pre id="ytOut"></pre>
+  </dialog>
+
+  <section id="downloads">
+  <div id="rows"></div>
+  <div class="actions">
+    <button onclick="addRow()"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Add link</button>
+    <button class="primary" onclick="downloadAll()"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Download all</button>
+  </div>
+  </section>
+  <section id="history_" hidden>
+    <div id="hist"></div>
+  </section>
+</main>
+
+<template id="rowT">
+  <div class="card">
+    <div class="row">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <input type="url" placeholder="Video or playlist URL">
+      <select title="Download as">
+        <option value="best">Best video</option>
+        <option value="2160">2160p</option><option value="1440">1440p</option>
+        <option value="1080" selected>1080p</option><option value="720">720p</option>
+        <option value="480">480p</option><option value="360">360p</option>
+        <option value="mp3">MP3 audio</option><option value="wav">WAV audio</option>
+      </select>
+      <button class="dl primary"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg><span>Download</span></button>
+      <button class="rm icon" title="Remove"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+    </div>
+    <div class="bar"><i></i></div>
+    <pre class="log"></pre>
+  </div>
+</template>
+
+<template id="histT">
+  <div class="card">
+    <div class="row">
+      <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+      <div class="meta">
+        <div class="title"></div>
+        <a class="url" target="_blank"></a>
+      </div>
+      <small class="fmt"></small>
+      <select title="Redownload as">
+        <option value="best">Best video</option>
+        <option value="2160">2160p</option><option value="1440">1440p</option>
+        <option value="1080">1080p</option><option value="720">720p</option>
+        <option value="480">480p</option><option value="360">360p</option>
+        <option value="mp3">MP3 audio</option><option value="wav">WAV audio</option>
+      </select>
+      <button class="re"><svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Redownload</button>
+      <button class="rm icon" title="Remove from history"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+    </div>
+  </div>
+</template>
+<script>
+const rows = document.getElementById('rows');
+let history = [];
+const state = () => ({
+  queue: [...rows.querySelectorAll(':scope > .card')].map(el => ({ url: el.querySelector('input').value.trim(), format: el.querySelector('select').value, status: el.dataset.status || 'pending' })).filter(q => q.url),
+  history,
+});
+const save = () => fetch('/api/queue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state()) });
+
+function addRow(q = {}) {
+  const el = document.getElementById('rowT').content.firstElementChild.cloneNode(true);
+  const input = el.querySelector('input'), sel = el.querySelector('select');
+  // ponytail: new rows inherit the last row's format
+  input.value = q.url || ''; sel.value = q.format || rows.lastElementChild?.querySelector('select').value || '1080';
+  if (q.status === 'downloading' || q.status === 'failed') { el.classList.add('resume'); el.querySelector('.log').textContent = q.status === 'failed' ? 'Failed last time. Click Resume to retry.' : 'Interrupted. Click Resume to continue.'; }
+  el.querySelector('.dl').onclick = () => download(el);
+  el.querySelector('.rm').onclick = () => { el.remove(); save(); };
+  input.onkeydown = e => e.key === 'Enter' && download(el);
+  input.onchange = sel.onchange = save;
+  rows.append(el);
+  if (!q.url) input.focus();
+  return el;
+}
+function download(el) {
+  const url = el.querySelector('input').value.trim();
+  if (!url) return;
+  const format = el.querySelector('select').value;
+  const btn = el.querySelector('.dl'), log = el.querySelector('.log'), bar = el.querySelector('.bar'), fill = bar.firstElementChild;
+  let file = url;
+  btn.disabled = true; log.textContent = 'Starting…\n'; el.classList.remove('done', 'fail', 'resume'); bar.style.display = 'block'; fill.style.width = '0';
+  el.dataset.status = 'downloading'; save();
+  const es = new EventSource(`/api/download?url=${encodeURIComponent(url)}&format=${format}`);
+  es.addEventListener('log', e => {
+    const l = JSON.parse(e.data); log.textContent += l + '\n'; log.scrollTop = 1e9;
+    const m = l.match(/\[download\]\s+([\d.]+)%/); if (m) fill.style.width = m[1] + '%';
+    const f = l.match(/(?:Destination: |Merging formats into ")(.+?)"?$/); if (f) file = f[1].split('/').pop();
+  });
+  es.addEventListener('done', e => {
+    const ok = JSON.parse(e.data) === 0; el.classList.add(ok ? 'done' : 'fail'); if (ok) fill.style.width = '100%';  btn.disabled = false; es.close();
+    if (ok) { history.unshift({ file, url, format, at: Date.now() }); el.remove(); renderHistory(); } else el.dataset.status = 'failed';
+    if (!rows.children.length) addRow();
+    save();
+  });
+  es.onerror = () => { log.textContent += 'ERROR: lost connection to app server\n'; el.classList.add('fail'); el.dataset.status = 'failed'; btn.disabled = false; es.close(); save(); };
+}
+function downloadAll() { rows.querySelectorAll(':scope > .card').forEach(download); }
+function renderHistory() {
+  const hist = document.getElementById('hist'); hist.innerHTML = '';
+  history.forEach((x, i) => {
+    const el = document.getElementById('histT').content.firstElementChild.cloneNode(true);
+    el.querySelector('.title').textContent = x.file; el.querySelector('.title').title = x.file;
+    const a = el.querySelector('.url'); a.textContent = x.url || ''; a.href = x.url || '#';
+    el.querySelector('.fmt').textContent = `${x.format} · ${new Date(x.at).toLocaleDateString()}`;
+    el.querySelector('select').value = x.format;
+    el.querySelector('.re').onclick = () => { showTab('downloads'); download(addRow({ url: x.url, format: el.querySelector('select').value })); };
+    el.querySelector('.rm').onclick = () => { history.splice(i, 1); renderHistory(); save(); };
+    hist.append(el);
+  });
+}
+async function pickFolder() {
+  const { outputDir: d } = await (await fetch('/api/pick')).json();
+  if (d) { outDir.value = d; saveSettings(); }
+}
+async function saveSettings() {
+  const r = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outputDir: outDir.value }) });
+  outDir.value = (await r.json()).outputDir;
+}
+function showTab(t) { downloads.hidden = t !== 'downloads'; history_.hidden = t !== 'history'; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t)); }
+function openSettings() { settings.showModal(); checkYtdlp(); }
+const OK = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>', WARN = '<svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+async function checkYtdlp() {
+  const s = await (await fetch('/api/ytdlp')).json();
+  const [cls, txt] = !s.installed ? ['err', 'yt-dlp not installed'] : s.outdated ? ['warn', `yt-dlp ${s.version} → ${s.latest} available`] : ['ok', `yt-dlp ${s.version}` + (s.latest ? '' : ' (offline)')];
+  ytBadge.className = 'badge ' + cls; ytBadge.innerHTML = (cls === 'ok' ? OK : WARN) + txt;
+  ytInfo.textContent = txt; ytUpd.querySelector('span').textContent = s.installed ? 'Update' : 'Install';
+  if (!s.installed || s.outdated) { ytUpd.classList.add('primary'); if (!settings.open) openSettings(); } else ytUpd.classList.remove('primary');
+}
+async function updateYtdlp() {
+  ytUpd.disabled = true; ytOut.textContent = 'Updating…';
+  const r = await (await fetch('/api/ytdlp/update', { method: 'POST' })).json();
+  ytOut.textContent = r.output; ytUpd.disabled = false; checkYtdlp();
+}
+fetch('/api/settings').then(r => r.json()).then(s => outDir.value = s.outputDir);
+fetch('/api/queue').then(r => r.json()).then(q => { history = q.history || []; renderHistory(); (q.queue || []).forEach(addRow); if (!rows.children.length) addRow(); });
+checkYtdlp();
+</script>
+</body></html>

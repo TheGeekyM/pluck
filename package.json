@@ -1,0 +1,66 @@
+{
+  "name": "pluck",
+  "version": "1.0.0",
+  "description": "Pluck videos and audio off YouTube. A dark, minimal desktop GUI for yt-dlp.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox",
+    "web": "node server.js",
+    "dist": "electron-builder --linux AppImage deb"
+  },
+  "keywords": [
+    "youtube",
+    "yt-dlp",
+    "downloader",
+    "electron",
+    "mp3",
+    "playlist"
+  ],
+  "author": {
+    "name": "Mohamed Emad",
+    "email": "thegeekym@gmail.com",
+    "url": "https://github.com/TheGeekyM"
+  },
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0"
+  },
+  "productName": "Pluck",
+  "homepage": "https://github.com/TheGeekyM/pluck",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheGeekyM/pluck.git"
+  },
+  "build": {
+    "appId": "com.thegeekym.pluck",
+    "productName": "Pluck",
+    "files": [
+      "main.js",
+      "server.js",
+      "public/**",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "AudioVideo"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "TheGeekyM",
+        "repo": "pluck"
+      }
+    ]
+  }
+}
